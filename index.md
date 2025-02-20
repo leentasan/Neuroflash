@@ -1,4 +1,4 @@
-## Krabby Flash  
+## KrabbyFlash  
 
 ### **Anggota Kelompok:**  
 - **Navika Berlianda Rihadatul’aisya** *(22/505243/TK/55277)*  
