@@ -1,0 +1,37 @@
+# General
+.DS_Store
+Thumbs.db
+node_modules/
+.env
+*.log
+*.pyc
+
+# Python Virtual Environment
+venv/
+__pycache__/
+
+# FastAPI & Backend
+backend/.env
+backend/__pycache__/
+backend/*.sqlite3
+backend/*.db
+
+# AI Service
+ai_service/.env
+ai_service/__pycache__/
+
+# Next.js & Frontend
+frontend/.next/
+frontend/out/
+frontend/.env.local
+frontend/.env.production
+frontend/.env.development
+
+# Docker
+*.dockerignore
+docker-compose.override.yml
+
+# VS Code & JetBrains IDEs
+.vscode/
+.idea/
+*.iml
