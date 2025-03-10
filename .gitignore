@@ -21,11 +21,7 @@ ai_service/.env
 ai_service/__pycache__/
 
 # Next.js & Frontend
-frontend/.next/
-frontend/out/
-frontend/.env.local
-frontend/.env.production
-frontend/.env.development
+
 
 # Docker
 *.dockerignore
@@ -35,3 +31,6 @@ docker-compose.override.yml
 .vscode/
 .idea/
 *.iml
+
+# Do not push frontend
+frontend/
