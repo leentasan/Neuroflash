@@ -50,7 +50,7 @@ export default function Home() {
                   type="text"
                   id="name"
                   className="mt-1 p-2 w-full border border-gray-300 rounded-md"
-                  placeholder="Value"
+                  placeholder="Enter your name"
                 />
               </div>
             )}
@@ -64,7 +64,7 @@ export default function Home() {
                 type="email"
                 id="email"
                 className="mt-1 p-2 w-full border border-gray-300 rounded-md"
-                placeholder="Value"
+                placeholder="Enter your email"
               />
             </div>
             
@@ -77,7 +77,7 @@ export default function Home() {
                 type="password"
                 id="password"
                 className="mt-1 p-2 w-full border border-gray-300 rounded-md"
-                placeholder="Value"
+                placeholder="Enter your password"
               />
             </div>
             
