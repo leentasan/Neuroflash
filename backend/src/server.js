@@ -1,6 +1,6 @@
 require("dotenv").config();
 const express = require("express");
-const db = require("./config/db"); // Kalau tidak dipakai, bisa dihapus
+const db = require("./config/db");
 const authRoutes = require("./routes/authRoutes"); 
 const deckRoutes = require("./routes/deckRoutes");
 const setRoutes = require("./routes/setRoutes");
