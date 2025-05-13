@@ -2,12 +2,21 @@
 "use client";
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Header from '../../components/header';
+import AddFlashcardModal from '../../components/addFlashcard/addFlashcardModal';
+
+interface Flashcard {
+  id: string;
+  front: string;
+  back: string;
+}
 
 interface Deck {
   id: string;
   name: string;
   cards: number;
+  flashcards: Flashcard[];
 }
 
 interface FlashcardSetClientProps {
@@ -15,8 +24,31 @@ interface FlashcardSetClientProps {
 }
 
 export default function FlashcardSetClient({ initialDeck }: FlashcardSetClientProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'about' | 'decks'>('about');
-  const [deck] = useState<Deck>(initialDeck);
+  const [deck, setDeck] = useState<Deck>({
+    ...initialDeck,
+    flashcards: initialDeck.flashcards || []
+  });
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  const handleStudyClick = () => {
+    router.push(`/flashcard-set/${deck.id}/study`);
+  };
+
+  const handleAddCard = (front: string, back: string) => {
+    const newCard: Flashcard = {
+      id: `card-${Date.now()}`,
+      front,
+      back
+    };
+
+    setDeck(prevDeck => ({
+      ...prevDeck,
+      cards: prevDeck.cards + 1,
+      flashcards: [...prevDeck.flashcards, newCard]
+    }));
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -32,7 +64,10 @@ export default function FlashcardSetClient({ initialDeck }: FlashcardSetClientPr
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{deck.name}</h1>
-            <button className="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-900 hover:bg-gray-800">
+            <button 
+              onClick={handleStudyClick}
+              className="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-900 hover:bg-gray-800"
+            >
               STUDY
             </button>
           </div>
@@ -72,33 +107,47 @@ export default function FlashcardSetClient({ initialDeck }: FlashcardSetClientPr
         ) : (
           <div>
             {/* General Deck */}
-            <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <h3 className="text-lg font-medium text-gray-900">General</h3>
-                <span className="text-sm text-gray-500">0 cards</span>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-4">
+                  <h3 className="text-lg font-medium text-gray-900">General</h3>
+                  <span className="text-sm text-gray-500">{deck.flashcards.length} cards</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                  >
+                    ADD CARD
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                  ADD CARD
-                </button>
-                <button className="inline-flex items-center p-1.5 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
+
+              {/* Flashcards List */}
+              <div className="space-y-3">
+                {deck.flashcards.map((card) => (
+                  <div key={card.id} className="bg-white p-4 rounded-md border border-gray-200">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-2">
+                        <p className="font-medium">Front:</p>
+                        <p className="text-gray-600">{card.front}</p>
+                        <p className="font-medium mt-4">Back:</p>
+                        <p className="text-gray-600">{card.back}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-
-            {/* Add Deck Button */}
-            <button className="mt-4 w-full flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg text-sm font-medium text-gray-600 hover:border-gray-400">
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Add new deck
-            </button>
           </div>
         )}
       </main>
+
+      <AddFlashcardModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAdd={handleAddCard}
+      />
     </div>
   );
 }

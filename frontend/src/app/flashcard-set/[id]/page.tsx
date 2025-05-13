@@ -8,12 +8,13 @@ interface PageProps {
 }
 
 export default async function FlashcardSetPage({ params }: PageProps) {
-  // You can fetch initial data here if needed
+  // You would typically fetch the deck data here
   const initialDeck = {
-    id: params.id,
+    id: await Promise.resolve(params.id), // Handle the async params
     name: "Cellular Respiration",
-    cards: 1
+    cards: 0,
+    flashcards: []
   };
 
   return <FlashcardSetClient initialDeck={initialDeck} />;
-}
+} 
