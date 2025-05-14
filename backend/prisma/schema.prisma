@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")       // Untuk koneksi aplikasi (pooling)
+  directUrl = env("DIRECT_URL")         // Khusus migrasi
 }
 
 model User {
@@ -42,14 +43,14 @@ model Deck {
 }
 
 model Progress {
-  id            Int      @id @default(autoincrement())
+  id            Int       @id @default(autoincrement())
   userId        Int
   deckId        Int
-  cardsMastered Int      @default(0)
-  studyTime     String   @default("0 seconds")
-  lastReviewed  DateTime @default(now())
-  deck          Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cardsMastered Int       @default(0)
+  studyTime     String?   @default("0 seconds")
+  lastReviewed  DateTime  @default(now())
+  deck          Deck      @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Flashcard {
@@ -67,7 +68,7 @@ model Quiz {
   deckId        Int
   question      String
   correctAnswer String
-  options       Json
+  options       Json?
   createdAt     DateTime @default(now())
   deck          Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
 }
