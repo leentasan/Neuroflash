@@ -1,4 +1,3 @@
-// frontend/src/app/flashcard-set/[id]/page.tsx
 import FlashcardSetClient from './FlashcardSetClient';
 
 interface PageProps {
@@ -7,9 +6,11 @@ interface PageProps {
   };
 }
 
-export default function FlashcardSetPage({ params }: PageProps) {
+export default async function FlashcardSetPage({ params }: PageProps) {
+  const { id } = await Promise.resolve(params); // ✅ ensures async handling
+
   const initialDeck = {
-    id: params.id,
+    id,
     name: 'Cellular Respiration',
     cards: 0,
     flashcards: []
