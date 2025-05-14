@@ -7,14 +7,13 @@ interface PageProps {
   };
 }
 
-export default async function FlashcardSetPage({ params }: PageProps) {
-  // Properly handle the async params without Promise.resolve
+export default function FlashcardSetPage({ params }: PageProps) {
   const initialDeck = {
-    id: params.id,  // Remove await Promise.resolve
-    name: "Cellular Respiration",
+    id: params.id,
+    name: 'Cellular Respiration',
     cards: 0,
     flashcards: []
   };
 
   return <FlashcardSetClient initialDeck={initialDeck} />;
-} 
+}
