@@ -1,12 +1,16 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const userModel = require('../models/userModel');
+const db = require('../config/db');
 
 const userService = {
   async register(email, password) {
     // Check if user exists
-    const existingUser = await userModel.findByEmail(email);
-    if (existingUser) {
+    const userExists = await db.query(
+      'SELECT * FROM "User" WHERE email = $1',
+      [email]
+    );
+
+    if (userExists.rows.length > 0) {
       throw new Error('Email already registered');
     }
 
@@ -15,16 +19,30 @@ const userService = {
     const passwordHash = await bcrypt.hash(password, salt);
 
     // Create user
-    const user = await userModel.create(email, passwordHash);
+    const result = await db.query(
+      'INSERT INTO "User" (email, password_hash, created_at) VALUES ($1, $2, NOW()) RETURNING id, email, created_at',
+      [email, passwordHash]
+    );
+
+    const user = result.rows[0];
 
     // Create default preferences
-    await userModel.createPreferences(user.id, {});
+    await db.query(
+      'INSERT INTO "UserPreferences" (user_id) VALUES ($1)',
+      [user.id]
+    );
 
-    // Generate token
+    // Generate JWT token
     const token = jwt.sign(
       { userId: user.id },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '7d' }
+    );
+
+    // Create user session
+    await db.query(
+      'INSERT INTO "UserSession" (user_id, token, expires_at) VALUES ($1, $2, NOW() + INTERVAL \'7 days\')',
+      [user.id, token]
     );
 
     return { user, token };
@@ -32,7 +50,12 @@ const userService = {
 
   async login(email, password) {
     // Find user
-    const user = await userModel.findByEmail(email);
+    const result = await db.query(
+      'SELECT * FROM "User" WHERE email = $1',
+      [email]
+    );
+
+    const user = result.rows[0];
     if (!user) {
       throw new Error('Invalid credentials');
     }
@@ -43,25 +66,41 @@ const userService = {
       throw new Error('Invalid credentials');
     }
 
-    // Update last login
-    await userModel.updateLastLogin(user.id);
-
-    // Generate token
+    // Generate JWT token
     const token = jwt.sign(
       { userId: user.id },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '7d' }
     );
 
-    return { user, token };
+    // Create user session
+    await db.query(
+      'INSERT INTO "UserSession" (user_id, token, expires_at) VALUES ($1, $2, NOW() + INTERVAL \'7 days\')',
+      [user.id, token]
+    );
+
+    // Update last login
+    await db.query(
+      'UPDATE "User" SET last_login = NOW() WHERE id = $1',
+      [user.id]
+    );
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        created_at: user.created_at
+      },
+      token
+    };
   },
 
-  async getUserPreferences(userId) {
-    return await userModel.getPreferences(userId);
-  },
-
-  async updateUserPreferences(userId, preferences) {
-    return await userModel.updatePreferences(userId, preferences);
+  async logout(token) {
+    // Invalidate session
+    await db.query(
+      'UPDATE "UserSession" SET expires_at = NOW() WHERE token = $1',
+      [token]
+    );
   }
 };
 

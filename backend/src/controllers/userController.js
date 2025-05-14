@@ -4,17 +4,18 @@ const userController = {
   async register(req, res) {
     try {
       const { email, password } = req.body;
-      const { user, token } = await userService.register(email, password);
-      
-      res.status(201).json({
-        user: {
-          id: user.id,
-          email: user.email,
-          created_at: user.created_at
-        },
-        token
-      });
+
+      // Validate input
+      if (!email || !password) {
+        return res.status(400).json({ 
+          error: 'Email and password are required' 
+        });
+      }
+
+      const result = await userService.register(email, password);
+      res.status(201).json(result);
     } catch (error) {
+      console.error('Registration error:', error);
       res.status(400).json({ error: error.message });
     }
   },
@@ -22,36 +23,34 @@ const userController = {
   async login(req, res) {
     try {
       const { email, password } = req.body;
-      const { user, token } = await userService.login(email, password);
 
-      res.json({
-        user: {
-          id: user.id,
-          email: user.email,
-          created_at: user.created_at
-        },
-        token
-      });
+      // Validate input
+      if (!email || !password) {
+        return res.status(400).json({ 
+          error: 'Email and password are required' 
+        });
+      }
+
+      const result = await userService.login(email, password);
+      res.json(result);
     } catch (error) {
+      console.error('Login error:', error);
       res.status(401).json({ error: error.message });
     }
   },
 
-  async getPreferences(req, res) {
+  async logout(req, res) {
     try {
-      const preferences = await userService.getUserPreferences(req.userId);
-      res.json(preferences);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
-  },
+      const token = req.headers.authorization?.split(' ')[1];
+      if (!token) {
+        return res.status(401).json({ error: 'No token provided' });
+      }
 
-  async updatePreferences(req, res) {
-    try {
-      const preferences = await userService.updateUserPreferences(req.userId, req.body);
-      res.json(preferences);
+      await userService.logout(token);
+      res.json({ message: 'Logged out successfully' });
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      console.error('Logout error:', error);
+      res.status(500).json({ error: error.message });
     }
   }
 };
