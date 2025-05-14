@@ -1,4 +1,4 @@
-// import Link from "next/link";
+// frontend/src/app/(main)/flashcards/page.tsx
 import SearchBar from "../../components/searchbar";
 import ClassCard from "../../components/classcard";
 import CreateClassCard from "../../components/createClassCard";
@@ -10,26 +10,28 @@ export default function Home() {
         <SearchBar/>
       </div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold"> Daftar Class </h1>
+        <h1 className="text-2xl font-bold">Daftar Class</h1>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <ClassCard
-         title="Cell"
-         subject="Bio"
-         flashcardCount={2}
+          id="cell-bio-1"  // Add unique ID
+          title="Cell"
+          subject="Bio"
+          flashcardCount={2}
           date="2023-10-01"
           progress={50} 
-         />
+        />
 
         <ClassCard
-         title="Cell"
-         subject="Bio"
-         flashcardCount={2}
+          id="cell-bio-2"  // Add unique ID
+          title="Cell"
+          subject="Bio"
+          flashcardCount={2}
           date="2023-10-01"
           progress={50} 
-         />
+        />
 
-         <CreateClassCard/>
+        <CreateClassCard/>
       </div>
     </div>
   );

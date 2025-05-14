@@ -16,7 +16,7 @@ export default function Header() {
       <nav className="flex space-x-8">
         <button onClick={() => handleNavigation('/dashboard')} className="hover:text-gray-500">Dashboard</button>
         <button onClick={() => handleNavigation('/flashcards')} className="hover:text-gray-500">Flashcards</button>
-        <button onClick={() => handleNavigation('/quizzes')} className="hover:text-gray-500">Quizzes</button>
+        <button onClick={() => handleNavigation('/quiz')} className="hover:text-gray-500">Quizzes</button>
         <button onClick={() => handleNavigation('/analytics')} className="hover:text-gray-500">Analytics</button>
       </nav>
       <div className="flex items-center space-x-2">
