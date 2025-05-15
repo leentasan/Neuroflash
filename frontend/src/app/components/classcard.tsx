@@ -1,7 +1,7 @@
 // frontend/src/app/components/classcard.tsx
 "use client";
-import { BookOpen } from "lucide-react";
-import { useRouter } from "next/navigation";
+// import { BookOpen } from "lucide-react";
+import Link from 'next/link';
 
 type ClassCardProps = {
     id: string; // Add id prop
@@ -12,46 +12,32 @@ type ClassCardProps = {
     progress: number;
 };
 
-export default function ClassCard({ id, title, subject, flashcardCount, date, progress}: ClassCardProps) {
-    const router = useRouter();
-
-    const handleClick = () => {
-        router.push(`/flashcard-set/${id}`);
-    };
-
+export default function ClassCard({
+    id,
+    title,
+    subject,
+    flashcardCount,
+    date,
+    progress,
+  }: ClassCardProps) {
     return (
-    <div 
-        className="bg-gray-100 p-6 rounded-lg cursor-pointer transition-all hover:shadow-md hover:bg-gray-50"
-        onClick={handleClick}
-    >
-        <div className="flex flex-col h-full">
-            <div className="flex justify-center mb-4">
-                <div className="bg-white p-4 rounded-md">
-                    <BookOpen className="w-10 h-10 text-gray-800"/>
-                </div>
+      <Link href={`/flashcard-set/${id}`}>
+        <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+          <h2 className="text-xl font-semibold mb-2">{title}</h2>
+          <p className="text-gray-600 mb-4">{subject}</p>
+          <div className="flex justify-between text-sm text-gray-500">
+            <span>{flashcardCount} flashcards</span>
+            <span>{new Date(date).toLocaleDateString()}</span>
+          </div>
+          <div className="mt-4">
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-blue-600 h-2 rounded-full"
+                style={{ width: `${progress}%` }}
+              />
             </div>
-
-            <h3 className="text-lg font-bold text-center mb-1">{title}</h3>
-            <p className="text-gray-700 mb-4 text-center">{subject}</p>
-
-            <div className="mt-auto">
-                <p className='text-sm font-medium'>{flashcardCount} Flashcards</p>
-                <p className="text-sm text-gray-600 mb-4">{date}</p>
-
-                <div className="relative pt-1">
-                    <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-200">
-                        <div
-                            className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gray-800 rounded-full"
-                            style={{ width: `${progress}%` }}>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="text-right">
-                    <span className="font-bold">{progress}%</span>
-                </div>
-            </div>
+          </div>
         </div>
-    </div>
+      </Link>
     );
-}
+  }

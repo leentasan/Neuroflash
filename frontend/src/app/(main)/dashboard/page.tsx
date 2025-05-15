@@ -1,7 +1,9 @@
 import Link from "next/link";
+import ProtectedRoute from '@/app/components/auth/ProtectedRoute';
 
 export default function Home() {
   return (
+    <ProtectedRoute>
     <main>
       {/* Hero Section */}
       <section className="bg-gray-800 text-white py-12 px-6">
@@ -86,5 +88,6 @@ export default function Home() {
         </div>
       </section>
     </main>
+    </ProtectedRoute>
   );
 }

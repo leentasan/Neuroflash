@@ -4,16 +4,40 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
+// Debug middleware for this route
+router.use((req, res, next) => {
+  console.log(`[Sets Route] ${req.method} ${req.path}`);
+  next();
+});
+
 // ✅ CREATE a new Set
 router.post("/", async (req, res) => {
   try {
-    const { userId, name } = req.body;
-    const newSet = await prisma.set.create({
-      data: { userId, name },
+    const { name, description, classId } = req.body;
+    
+    // Verify class exists before creating set
+    const classExists = await prisma.class.findUnique({
+      where: {
+        id: classId
+      }
     });
-    res.json(newSet);
+
+    if (!classExists) {
+      return res.status(404).json({ error: 'Class not found' });
+    }
+
+    const newSet = await prisma.set.create({
+      data: {
+        name,
+        description,
+        classId,
+        userId: "temporary-user-id"
+      }
+    });
+    res.status(201).json(newSet);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Error creating set:', error);
+    res.status(400).json({ error: 'Failed to create set', details: error.message });
   }
 });
 
@@ -64,6 +88,48 @@ router.delete("/:id", async (req, res) => {
     res.json({ message: "Set deleted" });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all sets for a specific class
+router.get('/class/:classId', async (req, res) => {
+  try {
+    const { classId } = req.params;
+    console.log(`Attempting to fetch sets for class: ${classId}`);
+
+    // First verify if the class exists
+    const classExists = await prisma.class.findUnique({
+      where: {
+        id: classId
+      }
+    });
+
+    if (!classExists) {
+      console.log(`Class not found with ID: ${classId}`);
+      return res.status(404).json({ 
+        error: 'Class not found',
+        classId: classId
+      });
+    }
+
+    const sets = await prisma.set.findMany({
+      where: {
+        classId: classId
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    console.log(`Found ${sets.length} sets for class ${classId}`);
+    return res.json(sets);
+  } catch (error) {
+    console.error('Error fetching sets:', error);
+    return res.status(500).json({ 
+      error: 'Failed to fetch sets',
+      details: error.message,
+      classId: req.params.classId
+    });
   }
 });
 

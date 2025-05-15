@@ -1,0 +1,95 @@
+const express = require('express');
+const router = express.Router();
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
+// Create a set within a class
+router.post('/', async (req, res) => {
+  try {
+    const { name, description, classId } = req.body;
+
+    // Get the temporary user
+    const testUser = await prisma.user.findFirst({
+      where: { email: 'test@example.com' }
+    });
+
+    const newSet = await prisma.set.create({
+      data: {
+        name,
+        description,
+        classId,
+        userId: testUser.id,
+      },
+      include: {
+        decks: true,
+      },
+    });
+
+    res.status(201).json(newSet);
+  } catch (error) {
+    console.error('Create set error:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get all sets for a class
+router.get('/class/:classId', async (req, res) => {
+  try {
+    const { classId } = req.params;
+    
+    const sets = await prisma.set.findMany({
+      where: {
+        classId,
+      },
+      include: {
+        decks: {
+          include: {
+            flashcards: true,
+          },
+        },
+      },
+    });
+
+    res.json(sets);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Update a set
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description } = req.body;
+
+    const updatedSet = await prisma.set.update({
+      where: { id },
+      data: {
+        name,
+        description,
+      },
+      include: {
+        decks: true,
+      },
+    });
+
+    res.json(updatedSet);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Delete a set
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.set.delete({
+      where: { id },
+    });
+    res.json({ message: 'Set deleted successfully' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+module.exports = router;

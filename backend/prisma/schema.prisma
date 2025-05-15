@@ -8,66 +8,172 @@ datasource db {
 }
 
 model User {
-  id        Int        @id @default(autoincrement())
-  name      String
-  email     String     @unique
-  password  String
-  createdAt DateTime   @default(now())
-  decks     Deck[]
-  Progress  Progress[]
-  sets      Set[]
+  id            String          @id @default(uuid())
+  email         String         @unique
+  password      String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  sets          Set[]
+  decks         Deck[]
+  progress      Progress[]
+  reviews       Review[]
+  sessions      UserSession[]
+  preferences   UserPreference?
+  sharedAccess  SharedAccess[]
+  classes       Class[]
+  activities    ActivityLog[]
+  studyProgress StudyProgress[]
+}
+
+model UserSession {
+  id          String    @id @default(uuid())
+  token       String    @unique
+  deviceInfo  String?
+  lastActive  DateTime  @default(now())
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserPreference {
+  id                String  @id @default(uuid())
+  defaultVisibility String  @default("private") // private, public
+  cardsPerSession   Int     @default(20)
+  reviewInterval    Int     @default(1)
+  userId           String  @unique
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Set {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  name      String
-  createdAt DateTime @default(now())
-  decks     Deck[]
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String        @id @default(uuid())
+  name        String
+  description String?
+  visibility  String        @default("private") // private, public
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  decks       Deck[]
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sharedWith  SharedAccess[]
+  classId     String?
+  class       Class?       @relation(fields: [classId], references: [id])
 }
 
 model Deck {
-  id          Int         @id @default(autoincrement())
-  userId      Int
-  setId       Int?
-  name        String
+  id         String      @id @default(uuid())
+  name       String
   description String?
-  createdAt   DateTime    @default(now())
-  set         Set?        @relation(fields: [setId], references: [id], onDelete: Cascade)
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  Flashcard   Flashcard[]
-  progress    Progress[]
-  Quiz        Quiz[]
-}
-
-model Progress {
-  id            Int      @id @default(autoincrement())
-  userId        Int
-  deckId        Int
-  cardsMastered Int      @default(0)
-  studyTime     String   @default("0 seconds")
-  lastReviewed  DateTime @default(now())
-  deck          Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  visibility String      @default("private")
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  setId      String?
+  set        Set?        @relation(fields: [setId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flashcards Flashcard[]
+  progress   Progress[]
+  quizzes    Quiz[]
+  sharedWith SharedAccess[]
 }
 
 model Flashcard {
-  id         Int      @id @default(autoincrement())
-  deckId     Int
-  question   String
-  answer     String
-  sourceText String?
-  createdAt  DateTime @default(now())
-  deck       Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  id            String    @id @default(uuid())
+  front         String
+  back          String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now())
+  deckId        String
+  deck          Deck      @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  reviews       Review[]
+  // SM2 Algorithm fields
+  easeFactor    Float     @default(2.5)
+  interval      Int       @default(1)
+  repetitions   Int       @default(0)
+  nextReview    DateTime  @default(now())
+  status        String    @default("new") // new, learning, learned
+  studyProgress StudyProgress[]
+}
+
+model StudyProgress {
+  id          String    @id @default(uuid())
+  userId      String
+  flashcardId String
+  status      String    // new, learning, learned
+  lastReviewed DateTime @default(now())
+  totalReviews Int      @default(0)
+  successRate  Float    @default(0)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flashcard   Flashcard @relation(fields: [flashcardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, flashcardId])
+}
+
+model Progress {
+  id        String   @id @default(uuid())
+  score     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deckId    String
+  userId    String
+  deck      Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Quiz {
-  id            Int      @id @default(autoincrement())
-  deckId        Int
-  question      String
-  correctAnswer String
-  options       Json
+  id           String   @id @default(uuid())
+  score        Int
+  totalCards   Int
+  correctCards Int
+  deckId       String
+  createdAt    DateTime @default(now())
+  deck         Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id          String    @id @default(uuid())
+  rating      Int       // SM2 rating (0-5)
+  createdAt   DateTime  @default(now())
+  flashcardId String
+  userId      String
+  flashcard   Flashcard @relation(fields: [flashcardId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Class {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sets        Set[]
+}
+
+model SharedAccess {
+  id            String   @id @default(uuid())
+  resourceId    String
+  resourceType  String   // "set" or "deck"
+  permission    String   // "read" or "write"
   createdAt     DateTime @default(now())
-  deck          Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  set           Set?     @relation(fields: [setId], references: [id], onDelete: Cascade)
+  setId         String?
+  deck          Deck?    @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  deckId        String?
+
+  @@unique([userId, resourceId, resourceType])
+}
+
+model ActivityLog {
+  id           String   @id @default(uuid())
+  actionType   String
+  resourceType String
+  resourceId   String
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

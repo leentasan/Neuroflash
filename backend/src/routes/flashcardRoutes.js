@@ -7,13 +7,18 @@ const prisma = new PrismaClient();
 // ✅ CREATE a new Flashcard
 router.post("/", async (req, res) => {
   try {
-    const { deckId, question, answer, sourceText } = req.body;
-    const newFlashcard = await prisma.flashcard.create({
-      data: { deckId, question, answer, sourceText },
+    const { question, answer, setId } = req.body;
+    const flashcard = await prisma.flashcard.create({
+      data: {
+        question,
+        answer,
+        setId,
+        userId: "temporary-user-id" // Using temporary user until auth is implemented
+      }
     });
-    res.json(newFlashcard);
+    res.status(201).json(flashcard);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 });
 
@@ -45,14 +50,14 @@ router.get("/:id", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { question, answer, sourceText } = req.body;
-    const updatedFlashcard = await prisma.flashcard.update({
-      where: { id: parseInt(id) },
-      data: { question, answer, sourceText },
+    const { question, answer } = req.body;
+    const flashcard = await prisma.flashcard.update({
+      where: { id },
+      data: { question, answer }
     });
-    res.json(updatedFlashcard);
+    res.json(flashcard);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 });
 
@@ -60,8 +65,24 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    await prisma.flashcard.delete({ where: { id: parseInt(id) } });
-    res.json({ message: "Flashcard deleted" });
+    await prisma.flashcard.delete({
+      where: { id }
+    });
+    res.json({ message: 'Flashcard deleted successfully' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get all flashcards in a set
+router.get('/set/:setId', async (req, res) => {
+  try {
+    const { setId } = req.params;
+    const flashcards = await prisma.flashcard.findMany({
+      where: { setId },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(flashcards);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

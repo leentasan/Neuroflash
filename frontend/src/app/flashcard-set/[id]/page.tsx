@@ -1,20 +1,16 @@
-import FlashcardSetClient from './FlashcardSetClient';
+import ClassSetsContent from "./ClassSetsContent";
 
-interface PageProps {
-  params: {
-    id: string;
-  };
-}
+// This is a Server Component
+export default async function ClassSetsPage({ params }: { params: { id: string } }) {
+  // Await the params in an async component
+  const classId = await Promise.resolve(params.id);
 
-export default async function FlashcardSetPage({ params }: PageProps) {
-  const { id } = await Promise.resolve(params); // ✅ ensures async handling
-
-  const initialDeck = {
-    id,
-    name: 'Cellular Respiration',
-    cards: 0,
-    flashcards: []
-  };
-
-  return <FlashcardSetClient initialDeck={initialDeck} />;
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <h1 className="text-3xl font-bold mb-6 text-gray-800">Class Flashcards</h1>
+        <ClassSetsContent classId={classId} />
+      </div>
+    </div>
+  );
 }

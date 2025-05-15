@@ -1,51 +1,51 @@
-const API_URL = 'http://localhost:5000/api/users';
+import api from './axios';
+
+export interface User {
+  id: string;
+  email: string;
+}
+
+export interface AuthResponse {
+  user: User;
+}
 
 export const authService = {
-  async register(email: string, password: string) {
-    const response = await fetch(`${API_URL}/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || 'Registration failed');
+  async register(email: string, password: string): Promise<AuthResponse> {
+    try {
+      const { data } = await api.post('/auth/register', { email, password });
+      return data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.error || 'Registration failed');
     }
-    return data;
   },
 
-  async login(email: string, password: string) {
-    const response = await fetch(`${API_URL}/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || 'Login failed');
+  async login(email: string, password: string): Promise<AuthResponse> {
+    try {
+      const { data } = await api.post('/auth/login', { email, password });
+      return data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.error || 'Login failed');
     }
-    return data;
   },
 
-  async logout() {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_URL}/logout`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || 'Logout failed');
+  async logout(): Promise<void> {
+    try {
+      await api.post('/auth/logout');
+    } catch (error: any) {
+      throw new Error(error.response?.data?.error || 'Logout failed');
     }
-    return data;
+  },
+
+  async getCurrentUser(): Promise<AuthResponse | null> {
+    try {
+      const { data } = await api.get('/auth/me');
+      return data;
+    } catch {
+      return null;
+    }
+  },
+
+  isAuthenticated() {
+    return !!localStorage.getItem('token');
   }
 };

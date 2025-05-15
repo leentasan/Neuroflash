@@ -1,12 +1,14 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { authService } from "@/services/api/auth";
+import { useRouter } from 'next/navigation';
 
 interface FormData {
   email: string;
   password: string;
 }
 export default function Home() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('register');
   const [formData, setFormData] = useState<FormData>({
     email: '',
@@ -14,6 +16,13 @@ export default function Home() {
   });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    if (authService.isAuthenticated()) {
+      router.push('/dashboard'); // Redirect if already logged in
+    }
+  }, [router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -28,23 +37,15 @@ export default function Home() {
     setSuccess(null);
 
     try {
-      let data;
-      if (activeTab === 'register') {
-        data = await authService.register(formData.email, formData.password);
-      } else {
-        data = await authService.login(formData.email, formData.password);
-      }
+      const data = await (activeTab === 'register' 
+        ? authService.register(formData.email, formData.password)
+        : authService.login(formData.email, formData.password));
 
-      // Store token
       if (data.token) {
         localStorage.setItem('token', data.token);
+        setSuccess(activeTab === 'register' ? 'Registration successful!' : 'Login successful!');
+        router.push('/dashboard');
       }
-
-      setSuccess(activeTab === 'register' ? 'Registration successful!' : 'Login successful!');
-      
-      // Optional: Redirect to dashboard or other page
-      // window.location.href = '/dashboard';
-      
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     }
