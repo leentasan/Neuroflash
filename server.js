@@ -5,6 +5,7 @@ const { supabase, supabaseAdmin } = require('./src/config/supabaseClient'); // I
 // Import route modules
 const authRoutes = require('./src/routes/authRoutes');
 const flashcardRoutes = require('./src/routes/flashcardRoutes'); // Example for other routes
+const studyRoutes = require('./src/routes/studyRoutes'); // <-- NEW: Import study routes
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -12,6 +13,7 @@ const port = process.env.PORT || 3000;
 // Global Middleware
 app.use(express.json()); // Body parser for JSON requests
 app.use(express.urlencoded({ extended: true })); // Body parser for URL-encoded requests (optional, but good practice)
+
 
 // Health check route
 app.get('/', (req, res) => {
@@ -21,6 +23,7 @@ app.get('/', (req, res) => {
 // Mount Route Modules
 app.use('/auth', authRoutes); // All routes defined in authRoutes will be prefixed with /auth
 app.use('/api/flashcards', flashcardRoutes); // Example: Prefix flashcard routes with /api/flashcards
+app.use('/api/study', studyRoutes); // <-- NEW: Use this for study mode operations
 
 // Basic error handling middleware (optional, but good practice for unhandled errors)
 app.use((err, req, res, next) => {

@@ -95,5 +95,248 @@ router.get('/:setId', protectRoute, async (req, res) => {
     }
 });
 
+// --- NEW Endpoints for Individual Flashcards within a Set ---
+
+// Helper to check if user owns the set (important for RLS and security)
+async function checkSetOwnership(userId, setId) {
+    const { data, error } = await supabase
+        .from('flashcardset') // Use correct table name
+        .select('id, owner_id')
+        .eq('id', setId)
+        .single();
+
+    if (error || !data) {
+        throw new Error('Flashcard set not found or not accessible.');
+    }
+    if (data.owner_id !== userId) {
+        throw new Error('Access denied: You do not own this flashcard set.');
+    }
+    return true;
+}
+
+// 1. Create a new Flashcard in a Set
+// POST /api/flashcards/:setId/cards
+router.post('/:setId/cards', protectRoute, async (req, res) => {
+    const { setId } = req.params;
+    const { question, answer } = req.body;
+    const userId = req.user.id;
+
+    if (!question || !answer) {
+        return res.status(400).json({ error: 'Question and answer are required for a flashcard.' });
+    }
+
+    try {
+        // First, verify that the user owns the flashcard set
+        await checkSetOwnership(userId, setId);
+
+        const { data, error } = await supabase
+            .from('flashcard') // Table for individual flashcards
+            .insert([{
+                set_id: setId,
+                question,
+                answer
+            }])
+            .select();
+
+        if (error) {
+            console.error('Supabase error creating flashcard:', error);
+            return res.status(500).json({
+                error: error.message || 'Failed to create flashcard.',
+                details: error
+            });
+        }
+
+        res.status(201).json(data[0]); // Return the created flashcard
+    } catch (err) {
+        console.error('Unexpected error in POST /api/flashcards/:setId/cards:', err.message);
+        // Provide a more specific status code if it's an ownership error
+        if (err.message.includes('Access denied')) {
+            return res.status(403).json({ error: err.message });
+        }
+        if (err.message.includes('not found')) {
+            return res.status(404).json({ error: err.message });
+        }
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+
+// 2. Get all Flashcards in a Set (similar to /api/study/:setId/all-cards, but without study progress)
+// GET /api/flashcards/:setId/cards
+router.get('/:setId/cards', protectRoute, async (req, res) => {
+    const { setId } = req.params;
+    const userId = req.user.id;
+
+    try {
+        // Verify that the user owns the flashcard set (or it's public/shared)
+        const { data: flashcardSet, error: setError } = await supabase
+            .from('flashcardset')
+            .select('id, owner_id, visibility')
+            .eq('id', setId)
+            .single();
+
+        if (setError || !flashcardSet) {
+            return res.status(404).json({ error: 'Flashcard set not found.' });
+        }
+
+        // Basic authorization check (RLS should handle this too, but good to have explicit)
+        if (flashcardSet.owner_id !== userId && flashcardSet.visibility === 'private') {
+            // Further RLS policies could allow 'shared' access here
+            return res.status(403).json({ error: 'Access denied to this flashcard set.' });
+        }
+
+        const { data, error } = await supabase
+            .from('flashcard')
+            .select('*')
+            .eq('set_id', setId);
+
+        if (error) {
+            console.error('Supabase error fetching flashcards for set:', error);
+            return res.status(500).json({ error: error.message || 'Failed to fetch flashcards.' });
+        }
+
+        res.status(200).json(data);
+    } catch (err) {
+        console.error('Unexpected error in GET /api/flashcards/:setId/cards:', err);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+
+// 3. Get a single Flashcard by ID
+// GET /api/flashcards/:setId/cards/:cardId
+router.get('/:setId/cards/:cardId', protectRoute, async (req, res) => {
+    const { setId, cardId } = req.params;
+    const userId = req.user.id;
+
+    try {
+        // Verify set ownership/access first
+        const { data: flashcardSet, error: setError } = await supabase
+            .from('flashcardset')
+            .select('id, owner_id, visibility')
+            .eq('id', setId)
+            .single();
+
+        if (setError || !flashcardSet) {
+            return res.status(404).json({ error: 'Flashcard set not found.' });
+        }
+
+        if (flashcardSet.owner_id !== userId && flashcardSet.visibility === 'private') {
+            return res.status(403).json({ error: 'Access denied to this flashcard set.' });
+        }
+
+        const { data, error } = await supabase
+            .from('flashcard')
+            .select('*')
+            .eq('id', cardId)
+            .eq('set_id', setId) // Ensure the card belongs to the specified set
+            .single();
+
+        if (error) {
+            console.error('Supabase error fetching flashcard:', error);
+            if (error.code === 'PGRST116') { // No rows found
+                return res.status(404).json({ error: 'Flashcard not found in this set.' });
+            }
+            return res.status(500).json({ error: error.message || 'Failed to fetch flashcard.' });
+        }
+
+        res.status(200).json(data);
+    } catch (err) {
+        console.error('Unexpected error in GET /api/flashcards/:setId/cards/:cardId:', err);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+
+// 4. Update a Flashcard
+// PUT /api/flashcards/:setId/cards/:cardId
+router.put('/:setId/cards/:cardId', protectRoute, async (req, res) => {
+    const { setId, cardId } = req.params;
+    const { question, answer } = req.body; // Allow partial updates
+
+    if (!question && !answer) {
+        return res.status(400).json({ error: 'At least question or answer must be provided for update.' });
+    }
+
+    const userId = req.user.id;
+
+    try {
+        // Verify that the user owns the flashcard set
+        await checkSetOwnership(userId, setId);
+
+        const updateData = { updated_at: new Date().toISOString() };
+        if (question !== undefined) updateData.question = question;
+        if (answer !== undefined) updateData.answer = answer;
+
+        const { data, error } = await supabase
+            .from('flashcard')
+            .update(updateData)
+            .eq('id', cardId)
+            .eq('set_id', setId) // Ensure we're updating a card within the correct set
+            .select();
+
+        if (error) {
+            console.error('Supabase error updating flashcard:', error);
+            return res.status(500).json({
+                error: error.message || 'Failed to update flashcard.',
+                details: error
+            });
+        }
+
+        if (data.length === 0) {
+            return res.status(404).json({ error: 'Flashcard not found or not part of this set.' });
+        }
+
+        res.status(200).json(data[0]);
+    } catch (err) {
+        console.error('Unexpected error in PUT /api/flashcards/:setId/cards/:cardId:', err.message);
+        if (err.message.includes('Access denied')) {
+            return res.status(403).json({ error: err.message });
+        }
+        if (err.message.includes('not found')) {
+            return res.status(404).json({ error: err.message });
+        }
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+
+// 5. Delete a Flashcard
+// DELETE /api/flashcards/:setId/cards/:cardId
+router.delete('/:setId/cards/:cardId', protectRoute, async (req, res) => {
+    const { setId, cardId } = req.params;
+    const userId = req.user.id;
+
+    try {
+        // Verify that the user owns the flashcard set
+        await checkSetOwnership(userId, setId);
+
+        const { error } = await supabase
+            .from('flashcard')
+            .delete()
+            .eq('id', cardId)
+            .eq('set_id', setId); // Ensure we're deleting a card within the correct set
+
+        if (error) {
+            console.error('Supabase error deleting flashcard:', error);
+            return res.status(500).json({
+                error: error.message || 'Failed to delete flashcard.',
+                details: error
+            });
+        }
+
+        // Supabase delete doesn't return data by default, check for success by affected rows
+        // You might need to add .select() to check if a row was actually deleted,
+        // or just assume success if no error.
+        // For accurate 404 on delete, consider fetching before deleting.
+        res.status(204).send(); // 204 No Content for successful deletion
+
+    } catch (err) {
+        console.error('Unexpected error in DELETE /api/flashcards/:setId/cards/:cardId:', err.message);
+        if (err.message.includes('Access denied')) {
+            return res.status(403).json({ error: err.message });
+        }
+        if (err.message.includes('not found')) {
+            return res.status(404).json({ error: err.message });
+        }
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+});
 
 module.exports = router;
