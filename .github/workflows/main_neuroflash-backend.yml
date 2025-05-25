@@ -71,5 +71,5 @@ jobs:
           app-name: 'neuroflash-backend'
           slot-name: 'Production'
           package: .
-          startupCommand: 'npm start'
+          
           
