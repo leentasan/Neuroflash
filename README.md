@@ -10,7 +10,7 @@ Anggota 1: Della Febi Alfian - 22/505892/TK/55393
 Anggota 2: Navika Berlianda Rihadatul'aisya - 22/505243/TK/55277   
 
 ## Deployments
-Backend : neuroflash-backend.azurewebsites.net
+Backend : [neuroflash-backend.azurewebsites.net](https://neuroflash-backend.azurewebsites.net/)
 Frontend : [Link]
 
 ## UI/UX Desigh
