@@ -23,14 +23,24 @@ jobs:
         with:
           node-version: '18.x'
 
-      - name: npm install, build, and test
+      # IMPORTANT: We only install production dependencies here if needed for build/test
+      # For Express apps, Azure usually handles 'npm install --production' on deploy.
+      # If you have a build step (e.g., for frontend assets), you'd run it here.
+      # For a pure Express backend, 'npm install' can be skipped,
+      # as only package.json and package-lock.json are needed for Azure to install dependencies.
+      - name: npm install (for build validation, if any)
         run: |
-          npm install
+          npm install # This might be needed if your tests/linters require dev deps
           npm run build --if-present
           # npm run test --if-present
 
-      - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+      - name: Zip artifact for deployment # <--- MODIFIED STEP
+        run: |
+          # Create a clean deployment package excluding node_modules, .git, .github, .env files
+          zip -r release.zip . -x "node_modules/*" ".git/*" ".github/*" ".env*"
+          # Verify package size (optional, for debugging)
+          ls -lh release.zip
+        working-directory: . # Ensure zipping happens from the root
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -53,10 +63,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: node-app
-
-      - name: Unzip artifact for deployment
-        run: unzip release.zip
       
+      - name: Unzip artifact for deployment # <--- No need to unzip if we pass the zip directly to 'package'
+        # Remove this step or change it if you have other files to process before deployment
+        # run: unzip release.zip 
+        run: ls -lh # Just for verification, you can remove this later. The 'release.zip' is downloaded to the current directory.
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -70,6 +82,6 @@ jobs:
         with:
           app-name: 'neuroflash-backend'
           slot-name: 'Production'
-          package: .
-          
-          
+          package: release.zip # <--- CRITICAL CHANGE: Pass the zip file directly
+          # Remove 'publish-profile' if using client-id/tenant-id/subscription-id for login
+          # publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
