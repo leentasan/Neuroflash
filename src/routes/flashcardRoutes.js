@@ -8,19 +8,32 @@ const { protectRoute } = require('../middleware/authMiddleware');
 router.get('/', protectRoute, async (req, res) => {
   try {
     // req.user.id is available from the protectRoute middleware
+    const userId = req.user.id; // Store user ID for logging
+    // req.user.id is available from the protectRoute middleware
+    // --- ADD LOGGING HERE ---
+    console.log('Fetching flashcard sets for user ID:', userId);
+    // --- END LOGGING ---
     const { data, error } = await supabase
       .from('flashcardset')
       .select('*')
-      .eq('owner_id', req.user.id); // Filter by the authenticated user's ID
+      .eq('owner_id', userId); // Filter by the authenticated user's ID
 
     if (error) {
       console.error('Error fetching flashcard sets:', error.message);
+      // --- ADD LOGGING HERE ---
+      console.error('Supabase query error details:', error);
+      // --- END LOGGING ---
       return res.status(500).json({ error: error.message });
     }
 
+    // --- ADD LOGGING HERE ---
+    console.log('Successfully fetched flashcard sets. Count:', data.length);
+    console.log('Fetched data:', data); // Log the actual data
+    // --- END LOGGING ---
+
     res.status(200).json(data);
   } catch (err) {
-    console.error('Unexpected error:', err);
+    console.error('Unexpected error in GET /api/flashcards', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
