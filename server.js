@@ -1,5 +1,6 @@
 require('dotenv').config(); // Load environment variables first
 const express = require('express');
+const cors = require('cors'); // Import CORS middleware for handling cross-origin requests
 const { supabase, supabaseAdmin } = require('./src/config/supabaseClient'); // Import Supabase clients
 
 // Import route modules
@@ -9,6 +10,18 @@ const studyRoutes = require('./src/routes/studyRoutes'); // <-- NEW: Import stud
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Configure CORS
+const corsOptions = {
+  origin: [
+    'http://localhost:3000', // Allow your local frontend
+    'https://your-deployed-frontend-url.vercel.app' // Add your deployed frontend URL here when you deploy it
+  ],
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true, // Allow cookies to be sent
+  optionsSuccessStatus: 204 // Some legacy browsers (IE11, various SmartTVs) choke on 200
+};
+app.use(cors(corsOptions)); // <--- USE CORS MIDDLEWARE HERE
 
 // Global Middleware
 app.use(express.json()); // Body parser for JSON requests
