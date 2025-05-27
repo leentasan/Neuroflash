@@ -11,7 +11,7 @@ Anggota 2: Navika Berlianda Rihadatul'aisya - 22/505243/TK/55277
 
 ## Deployments
 Backend : [neuroflash-backend.azurewebsites.net](https://neuroflash-backend.azurewebsites.net/)
-Frontend : [Link]
+Frontend : [Vercel frontend](https://my-supabase-next-pr5ryggua-krystolizs-projects.vercel.app)
 
 ## UI/UX Desigh
 https://www.figma.com/design/vKBp0EKM7AA2LOESOHc4Of/SENPRO-B3_16?node-id=0-1&t=ORQWlnwjEJNTGTWZ-1
