@@ -105,9 +105,17 @@ export default function FlashcardSetsPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
         </div>
-        <Link href="/flashcards/create" className="px-5 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full md:w-auto text-center">
-          + Create New Class
-        </Link>
+        <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 w-full md:w-auto">
+          <Link 
+            href="/flashcards/generate-llm" // <--- NEW BUTTON LINK
+            className="px-5 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors w-full text-center"
+          >
+            AI Generate Cards
+          </Link>
+          <Link href="/flashcards/create" className="px-5 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full text-center">
+            + Create New Class
+          </Link>
+        </div>
       </div>
 
       {/* List of Flashcard Sets */}
