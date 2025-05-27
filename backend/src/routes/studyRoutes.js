@@ -1,8 +1,9 @@
 // src/routes/studyRoutes.js
-const express = require('express');
+import express from 'express'; // Use ES6 import syntax for consistency
 const router = express.Router();
-const { supabase, supabaseAdmin } = require('../config/supabaseClient'); // Need both for some operations
-const { protectRoute } = require('../middleware/authMiddleware');
+import { supabase, supabaseAdmin } from '../config/supabaseClient.js'; // Import Supabase clients
+import { protectRoute } from '../middleware/authMiddleware.js'; // Import authentication middleware
+
 
 // --- Helper function for SM-2 calculation (on the backend) ---
 function calculateSM2(qualityOfResponse, currentEaseFactor, currentRepetitions, currentInterval) {
@@ -306,4 +307,4 @@ router.get('/:setId/all-cards', protectRoute, async (req, res) => {
 });
 
 
-module.exports = router;
+export default router; // Export the router

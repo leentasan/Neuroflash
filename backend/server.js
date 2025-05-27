@@ -1,12 +1,14 @@
-require('dotenv').config(); // Load environment variables first
-const express = require('express');
-const cors = require('cors'); // Import CORS middleware for handling cross-origin requests
-const { supabase, supabaseAdmin } = require('./src/config/supabaseClient'); // Import Supabase clients
+import dotenv from 'dotenv'; 
+dotenv.config(); // Load environment variables from .env file
+import express from 'express';
+import cors from 'cors'
+import {supabase, supabaseAdmin} from './src/config/supabaseClient.js'; // Import Supabase clients
 
 // Import route modules
-const authRoutes = require('./src/routes/authRoutes');
-const flashcardRoutes = require('./src/routes/flashcardRoutes'); // Example for other routes
-const studyRoutes = require('./src/routes/studyRoutes'); // <-- NEW: Import study routes
+import authRoutes from './src/routes/authRoutes.js';
+import flashcardRoutes from './src/routes/flashcardRoutes.js'; // Example for other routes
+import studyRoutes from './src/routes/studyRoutes.js'; // <-- NEW: Import study routes
+import llmRoutes from './src/routes/llmRoutes.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -36,7 +38,8 @@ app.get('/', (req, res) => {
 // Mount Route Modules
 app.use('/auth', authRoutes); // All routes defined in authRoutes will be prefixed with /auth
 app.use('/api/flashcards', flashcardRoutes); // Example: Prefix flashcard routes with /api/flashcards
-app.use('/api/study', studyRoutes); // <-- NEW: Use this for study mode operations
+app.use('/api/study', studyRoutes);
+app.use('/api/llm', llmRoutes);      // <-- NEW: Use this for LLM operations
 
 // Basic error handling middleware (optional, but good practice for unhandled errors)
 app.use((err, req, res, next) => {

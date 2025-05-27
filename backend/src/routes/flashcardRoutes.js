@@ -1,8 +1,9 @@
 // src/routes/flashcardRoutes.js
-const express = require('express');
+import express from 'express'; // Use ES6 import syntax for consistency
 const router = express.Router();
-const { supabase } = require('../config/supabaseClient'); // Only need 'supabase' client for data access (RLS-enabled)
-const { protectRoute } = require('../middleware/authMiddleware');
+import { supabase } from '../config/supabaseClient.js';
+import { protectRoute } from '../middleware/authMiddleware.js';
+
 
 // Route to get all flashcard sets for the authenticated user
 router.get('/', protectRoute, async (req, res) => {
@@ -352,4 +353,4 @@ router.delete('/:setId/cards/:cardId', protectRoute, async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router; // Export the router for use in server.js
