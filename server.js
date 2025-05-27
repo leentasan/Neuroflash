@@ -15,7 +15,7 @@ const port = process.env.PORT || 3000;
 const corsOptions = {
   origin: [
     'http://localhost:3000', // Allow your local frontend
-    'https://my-supabase-next-mt3mg5ikr-krystolizs-projects.vercel.app' // Add your deployed frontend URL here when you deploy it
+    'https://my-supabase-next-app.vercel.app' // Add your deployed frontend URL here when you deploy it
   ],
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true, // Allow cookies to be sent
