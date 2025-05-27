@@ -1,0 +1,23 @@
+.env
+node_modules
+
+# Dependencies
+/node_modules
+
+# Environment variables
+.env
+.env.local
+
+# npm debug logs
+npm-debug.log*
+.npm/
+.c9/
+
+# OS generated files
+.DS_Store
+.vscode/
+Thumbs.db
+
+# Build artifacts (if you had any build step)
+/build
+/dist
